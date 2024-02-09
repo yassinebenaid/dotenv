@@ -71,8 +71,9 @@ func (p *parser) readKey() []byte {
 func (p *parser) readValue() ([]byte, error) {
 	var value []byte
 
-	var quoted = p.current == '"'
-	if quoted {
+	var quoted_with byte
+	if p.current == '"' || p.current == '\'' {
+		quoted_with = p.current
 		p.next()
 	}
 
@@ -80,11 +81,11 @@ func (p *parser) readValue() ([]byte, error) {
 		if i == '\\' {
 			p.next()
 		}
-		if !quoted && i == '#' && (p.previous == ' ' || p.previous == '=') {
+		if quoted_with == 0 && i == '#' && (p.previous == ' ' || p.previous == '=') {
 			value = bytes.TrimRight(value, " ")
 			break
 		}
-		if quoted && i == '"' {
+		if quoted_with == i { // if the value is quoted and this is the right quote
 			break
 		}
 		if i == '$' {
@@ -97,8 +98,8 @@ func (p *parser) readValue() ([]byte, error) {
 		i = p.next()
 	}
 
-	if quoted {
-		if p.current == '"' {
+	if quoted_with != 0 {
+		if p.current == quoted_with {
 			p.next()
 		} else {
 			return nil, p.errorUnterminatedQuotedValue(value)
