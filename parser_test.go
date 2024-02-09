@@ -188,6 +188,26 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestParserErrors(t *testing.T) {
+	testCases := []struct {
+		input       string
+		expectedErr string
+	}{
+		{"key", `expected "=", found end of file, line 1:3`},
+		{`key= "hello`, `unterminated quoted value "hello", line 1:11`},
+		{`key hello`, `expected "=", found "h", line 1:5`},
+	}
+
+	for _, tc := range testCases {
+		p := parser{input: []byte(tc.input), env: make(map[string]string)}
+
+		err := p.parse()
+		if assert.Error(t, err) {
+			assert.Equal(t, tc.expectedErr, err.Error())
+		}
+	}
+}
+
 func BenchmarkParser(b *testing.B) {
 	input := `
 	# all at once	

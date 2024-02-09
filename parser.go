@@ -5,14 +5,6 @@ import (
 	"fmt"
 )
 
-type errUnexpectedSymbole struct {
-	ch byte
-}
-
-func (e errUnexpectedSymbole) Error() string {
-	return fmt.Sprintf(`unexpected symbole "%c"`, e.ch)
-}
-
 type parser struct {
 	env      map[string]string
 	input    []byte
@@ -35,7 +27,7 @@ func (p *parser) parse() error {
 		key := p.readKey()
 		p.consumeSpace(false)
 		if p.current != '=' {
-			return errUnexpectedSymbole{p.current}
+			return p.errorUnuexpectedSymbole("=")
 		}
 		p.next()
 		p.consumeSpace(false)
@@ -109,7 +101,7 @@ func (p *parser) readValue() ([]byte, error) {
 		if p.current == '"' {
 			p.next()
 		} else {
-			return nil, fmt.Errorf(`unterminated quoted value "%s"`, value)
+			return nil, p.errorUnterminatedQuotedValue(value)
 		}
 	} else {
 		value = bytes.Trim(value, " ")
@@ -164,4 +156,29 @@ func (p *parser) readVariable() []byte {
 	}
 
 	return []byte(p.env[string(var_name)])
+}
+
+func (p *parser) errorUnuexpectedSymbole(expected string) error {
+	var line = 1
+	for i := 0; i < p.position; i++ {
+		if p.input[i] == '\n' {
+			line++
+		}
+	}
+
+	if p.current == 0 {
+		return fmt.Errorf(`expected "%s", found end of file, line %d:%d`, expected, line, p.position)
+	}
+	return fmt.Errorf(`expected "%s", found "%c", line %d:%d`, expected, p.current, line, p.position)
+}
+
+func (p *parser) errorUnterminatedQuotedValue(v []byte) error {
+	var line = 1
+	for i := 0; i < p.position; i++ {
+		if p.input[i] == '\n' {
+			line++
+		}
+	}
+
+	return fmt.Errorf(`unterminated quoted value "%s", line %d:%d`, v, line, p.position)
 }
