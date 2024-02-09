@@ -183,3 +183,10 @@ func (p *parser) errorUnterminatedQuotedValue(v []byte) error {
 
 	return fmt.Errorf(`unterminated quoted value "%s", line %d:%d`, v, line, p.position)
 }
+
+func (p *parser) reset() {
+	p.input = nil
+	p.position = 0
+	p.previous = 0
+	p.current = 0
+}
