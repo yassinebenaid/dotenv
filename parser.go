@@ -79,13 +79,28 @@ func (p *parser) readKey() []byte {
 func (p *parser) readValue() ([]byte, error) {
 	var value []byte
 
-	for i := p.current; i != 0 && i != '\n'; i = p.next() {
-		if i == '#' {
-			p.consumeComment()
-			return value, nil
-		}
+	var quoted bool
+	if p.current == '"' {
+		quoted = true
+		p.next()
+	}
 
-		value = append(value, i)
+	for i := p.current; i != 0 && i != '\n'; i = p.next() {
+		if !quoted && i == '#' {
+			break
+		}
+		if quoted && i == '"' {
+			break
+		}
+		value = append(value, p.current)
+	}
+
+	if quoted {
+		if p.current == '"' {
+			p.next()
+		} else {
+			return nil, fmt.Errorf(`unterminated quoted value "%s"`, value)
+		}
 	}
 
 	return value, nil

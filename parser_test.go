@@ -30,6 +30,8 @@ func TestParse(t *testing.T) {
 		{"key1= value #comment", map[string]string{"key1": "value"}},
 		{"key1=#comment", map[string]string{"key1": ""}},
 		{"#comment", map[string]string{}},
+		{`key="value"`, map[string]string{"key": "value"}},
+		{`key="#quoted-comment"`, map[string]string{"key": "#quoted-comment"}},
 		{`
 	KEY_1 = value-1
 	KEY_2 = value-2
