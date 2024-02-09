@@ -146,8 +146,21 @@ func (p *parser) consumeComment() {
 func (p *parser) readVariable() []byte {
 	var var_name []byte
 
+	var with_braces = p.current == '{'
+	if with_braces {
+		p.next()
+	}
+
 	for i := p.current; (i >= 65 && i <= 90) || (i >= 48 && i <= 57) || i == 95; i = p.next() {
 		var_name = append(var_name, i)
+	}
+
+	if with_braces {
+		if p.current == '}' {
+			p.next()
+		} else {
+			return append([]byte("${"), var_name...)
+		}
 	}
 
 	return []byte(p.env[string(var_name)])

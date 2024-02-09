@@ -94,14 +94,14 @@ func TestParse(t *testing.T) {
 			KEY_2=inline-\$KEY_1-value
 		`, map[string]string{"KEY_1": "value", "KEY_2": "inline-$KEY_1-value"}},
 		{`
-			# all at once	
-			KEY_1=value # inline comment	
+			# all at once
+			KEY_1=value # inline comment
 
-			# empty lines	
-			# multi line	
-			# comment	
-			KEY_2=inline-$KEY_1-value	
-			KEY_3=$KEY_2 # comment	
+			# empty lines
+			# multi line
+			# comment
+			KEY_2=inline-$KEY_1-value
+			KEY_3=$KEY_2 # comment
 			KEY_4	=	$UNDEFINED_KEY	 # comment with tabs
 			KEY_5 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_world	 " # comment with tabs
 		`, map[string]string{
@@ -111,6 +111,69 @@ func TestParse(t *testing.T) {
 			"KEY_4": "",
 			"KEY_5": "value_inline-value-value_inline-value-value__world	 ",
 		}},
+
+		//
+		{`
+			KEY_1=value
+			KEY_2=${KEY_1}
+		`, map[string]string{"KEY_1": "value", "KEY_2": "value"}},
+		{`
+			KEY_1=value
+			KEY_2="${KEY_1}-world"
+		`, map[string]string{"KEY_1": "value", "KEY_2": "value-world"}},
+		{`
+			KEY_1=value
+			KEY_2="hello-${KEY_1}-world"
+		`, map[string]string{"KEY_1": "value", "KEY_2": "hello-value-world"}},
+		{`KEY="${UNDEFINED}"`, map[string]string{"KEY": ""}},
+		{`KEY=hello ${UNDEFINED} world`, map[string]string{"KEY": "hello  world"}},
+		{`KEY=hello${UNDEFINED}world`, map[string]string{"KEY": "helloworld"}},
+		{`KEY=\${ESCAPED}`, map[string]string{"KEY": "${ESCAPED}"}},
+		{`KEY=	${UNDEFINED} s`, map[string]string{"KEY": "s"}},
+		{`KEY=inline-\${ESCAPED}-value`, map[string]string{"KEY": "inline-${ESCAPED}-value"}},
+		{`
+			KEY_1=value
+			KEY_2=inline-\${KEY_1}-value
+		`, map[string]string{"KEY_1": "value", "KEY_2": "inline-${KEY_1}-value"}},
+		{`
+			# all at once
+			KEY_1=value # inline comment
+
+			# empty lines
+			# multi line
+			# comment
+			KEY_2=inline-${KEY_1}-value
+			KEY_3=${KEY_2} # comment
+			KEY_4	=	${UNDEFINED_KEY}	 # comment with tabs
+			KEY_5 = "${KEY_1}\_${KEY_2}\_${KEY_3}\_${KEY_4}\_world	 " # comment with tabs
+		`, map[string]string{
+			"KEY_1": "value",
+			"KEY_2": "inline-value-value",
+			"KEY_3": "inline-value-value",
+			"KEY_4": "",
+			"KEY_5": "value_inline-value-value_inline-value-value__world	 ",
+		}},
+		{`KEY=${SOME_KEY`, map[string]string{"KEY": "${SOME_KEY"}},
+		{`
+			KEY_1=value
+			KEY_2=${KEY_1
+		`, map[string]string{"KEY_1": "value", "KEY_2": "${KEY_1"}},
+		{`
+			KEY_1=value
+			KEY_2=${KEY_1 test
+		`, map[string]string{"KEY_1": "value", "KEY_2": "${KEY_1 test"}},
+		{`
+			KEY_1=value
+			KEY_2=${KEY_1test
+		`, map[string]string{"KEY_1": "value", "KEY_2": "${KEY_1test"}},
+		{`
+			KEY_1=value
+			KEY_2="${KEY_1test"
+		`, map[string]string{"KEY_1": "value", "KEY_2": "${KEY_1test"}},
+		{`
+			KEY_1=value
+			KEY_2="${KEY_1}test"
+		`, map[string]string{"KEY_1": "value", "KEY_2": "valuetest"}},
 	}
 
 	for _, tc := range testCases {
