@@ -3,6 +3,7 @@ package dotenv
 import (
 	"testing"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -121,5 +122,59 @@ func TestParse(t *testing.T) {
 		assert.NotNil(t, p.env)
 
 		assert.Equal(t, tc.expected, p.env)
+	}
+}
+
+func BenchmarkParser(b *testing.B) {
+	input := `
+	# all at once	
+	KEY_1=value # inline comment	
+
+	# empty lines	
+	# multi line	
+	# comment	
+	KEY_2=inline-$KEY_1-value	
+	KEY_3=$KEY_2 # comment	
+	KEY_4	=	$UNDEFINED_KEY	 # comment with tabs
+	KEY_5 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_world	 " # comment with tabs
+	KEY_6 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_world	 " # comment with tabs
+	KEY_7 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_world	 " # comment with tabs
+	KEY_8 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_world	 " # comment with tabs
+	KEY_9 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_$KEY_8\_world	 " # comment with tabs
+	KEY_10 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_$KEY_8\_$KEY_9\_world	 " # comment with tabs
+	`
+
+	for i := 0; i < b.N; i++ {
+		p := parser{input: []byte(input), env: make(map[string]string)}
+		if err := p.parse(); err != nil {
+			b.Fail()
+		}
+	}
+}
+
+func BenchmarkGodotenvPackage(b *testing.B) {
+	input := `
+	# all at once	
+	KEY_1=value # inline comment	
+
+	# empty lines	
+	# multi line	
+	# comment	
+	KEY_2=inline-$KEY_1-value	
+	KEY_3=$KEY_2 # comment	
+	KEY_4	=	$UNDEFINED_KEY	 # comment with tabs
+	KEY_5 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_world	 " # comment with tabs
+	KEY_6 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_world	 " # comment with tabs
+	KEY_7 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_world	 " # comment with tabs
+	KEY_8 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_world	 " # comment with tabs
+	KEY_9 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_$KEY_8\_world	 " # comment with tabs
+	KEY_10 = "$KEY_1\_$KEY_2\_$KEY_3\_$KEY_4\_$KEY_5\_$KEY_6\_$KEY_7\_$KEY_8\_$KEY_9\_world	 " # comment with tabs
+	`
+
+	for i := 0; i < b.N; i++ {
+		_, err := godotenv.Unmarshal(input)
+		if err != nil {
+			b.Fail()
+		}
 	}
 }
