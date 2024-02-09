@@ -113,6 +113,7 @@ func (p *parser) readValue() ([]byte, error) {
 		}
 	} else {
 		value = bytes.Trim(value, " ")
+		value = bytes.Trim(value, "\t")
 	}
 
 	return value, nil
