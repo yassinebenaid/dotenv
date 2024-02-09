@@ -181,3 +181,21 @@ func main(){
 }
 ``
 ```
+
+for more details check [go doc](https://pkg.go.dev/pkg/github.com/yassinebenaid/dotenv)
+
+# Contributing
+
+Contributions are welcome, make sure to include tests or update exising ones to cover your changes.
+
+_code changes without tests and references to peer dotenv implementations will not be accepted_
+
+- Fork it
+- Create your feature branch (git checkout -b my-new-feature)
+- Commit your changes (git commit -am 'Added some feature')
+- Push to the branch (git push origin my-new-feature)
+- Create new Pull Request
+
+# Licence
+
+Check the [Licence file](./LICENCE) for details.
