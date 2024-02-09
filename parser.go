@@ -1,8 +1,8 @@
 package dotenv
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
 )
 
 type errUnexpectedSymbole struct {
@@ -13,46 +13,46 @@ func (e errUnexpectedSymbole) Error() string {
 	return fmt.Sprintf(`unexpected symbole "%c"`, e.ch)
 }
 
-func parse(s []byte) (map[string]string, error) {
-	env := make(map[string]string)
+type parser struct {
+	env      map[string]string
+	input    []byte
+	position int
+	current  byte
+	previous byte
+}
 
-	p := parser{input: s}
-
+func (p *parser) parse() error {
 	p.next()
 	p.consumeSpace(true)
 
 	for i := p.current; i != 0x0; i = p.current {
 		if p.current == '#' {
 			p.consumeComment()
+			p.consumeSpace(true)
 			continue
 		}
 
 		key := p.readKey()
 		p.consumeSpace(false)
 		if p.current != '=' {
-			return nil, errUnexpectedSymbole{p.current}
+			return errUnexpectedSymbole{p.current}
 		}
 		p.next()
 		p.consumeSpace(false)
 		value, err := p.readValue()
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		env[string(key)] = strings.TrimSpace(string(value))
+		p.env[string(key)] = string(value)
 		p.consumeSpace(true)
 	}
 
-	return env, nil
-}
-
-type parser struct {
-	input    []byte
-	position int
-	current  byte
+	return nil
 }
 
 func (p *parser) next() byte {
+	p.previous = p.current
 	if p.position >= len(p.input) {
 		p.current = 0
 	} else {
@@ -79,20 +79,30 @@ func (p *parser) readKey() []byte {
 func (p *parser) readValue() ([]byte, error) {
 	var value []byte
 
-	var quoted bool
-	if p.current == '"' {
-		quoted = true
+	var quoted = p.current == '"'
+	if quoted {
 		p.next()
 	}
 
-	for i := p.current; i != 0 && i != '\n'; i = p.next() {
-		if !quoted && i == '#' {
+	for i := p.current; i != 0 && i != '\n'; {
+		if i == '\\' {
+			p.next()
+		}
+		if !quoted && i == '#' && (p.previous == ' ' || p.previous == '=') {
+			value = bytes.TrimRight(value, " ")
 			break
 		}
 		if quoted && i == '"' {
 			break
 		}
+		if i == '$' {
+			p.next()
+			value = append(value, p.readVariable()...)
+			i = p.current
+			continue
+		}
 		value = append(value, p.current)
+		i = p.next()
 	}
 
 	if quoted {
@@ -101,6 +111,8 @@ func (p *parser) readValue() ([]byte, error) {
 		} else {
 			return nil, fmt.Errorf(`unterminated quoted value "%s"`, value)
 		}
+	} else {
+		value = bytes.Trim(value, " ")
 	}
 
 	return value, nil
@@ -128,4 +140,14 @@ func (p *parser) consumeComment() {
 	for p.current != '\n' && p.current != 0 {
 		p.next()
 	}
+}
+
+func (p *parser) readVariable() []byte {
+	var var_name []byte
+
+	for i := p.current; (i >= 65 && i <= 90) || (i >= 48 && i <= 57) || i == 95; i = p.next() {
+		var_name = append(var_name, i)
+	}
+
+	return []byte(p.env[string(var_name)])
 }
