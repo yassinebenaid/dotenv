@@ -2,6 +2,10 @@
 
 Go Library to read environment variables from .env file.
 
+[![Tests](https://github.com/yassinebenaid/dotenv/actions/workflows/tests.yaml/badge.svg)](https://github.com/yassinebenaid/dotenv/actions/workflows/ci.yaml)
+[![Version](https://badge.fury.io/gh/yassinebenaid%2Fdotenv.svg)](https://badge.fury.io/gh/yassinebenaid%2Fdotenv)
+[![AGPL License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENCE)
+
 # Usage
 
 install the library :
