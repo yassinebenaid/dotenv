@@ -2,6 +2,8 @@
 
 Go Library to read environment variables from .env file.
 
+[![Tests](https://github.com/yassinebenaid/dotenv/actions/workflows/ci.yaml/badge.svg)](https://github.com/yassinebenaid/dotenv/actions/workflows/ci.yaml)
+
 # Usage
 
 install the library :
